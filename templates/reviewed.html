@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Reviewed
+{% endblock %}
+
+{% block main %}
+    <h2>{{club.name}}</h2>
+    <h3>{{club.category}}</h3>
+    <h1>Overall Ratings</h1>
+
+    <!-- Create canvas for the chart -->
+    <canvas id="overallRatingsChart" width="400" height="200"></canvas>
+
+    <!-- Include Jinja to generate JavaScript code for the chart -->
+    <script>
+        var ctx = document.getElementById('overallRatingsChart').getContext('2d');
+        var data = {
+            labels: {{ analysis_data.overall_ratings.labels| sort | tojson | safe }},
+            datasets: [{
+                label: 'Number of Respondents',
+                data: {{ analysis_data.overall_ratings.data | tojson | safe }},
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+        var options = {
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: {{ analysis_data.overall_ratings.labels | sort | tojson | safe }},
+                    beginAtZero: true
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: options
+        });
+    </script>
+    <br>
+    <canvas id="medianRatingsChart" width="400" height="200"></canvas>
+
+    <script>
+        var ctxMedian = document.getElementById('medianRatingsChart').getContext('2d');
+        var dataMedian = {
+            labels: {{analysis_data.median_ratings.labels| sort | tojson | safe  }},
+            datasets: [{
+                label: 'Median Ratings',
+                data: {{analysis_data.median_ratings.data | tojson | safe}},
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        };
+        var optionsMedian = {
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: {{ analysis_data.median_ratings.labels | sort | tojson | safe }},
+                    beginAtZero: true
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+        var myChartMedian = new Chart(ctxMedian, {
+            type: 'bar',
+            data: dataMedian,
+            options: optionsMedian
+        });
+    </script>
+    
+    <br>
+    <h1>Comp Components</h1>
+    
+    <canvas id="compComponentsPieChart" width="400" height="200"></canvas>
+    <script>
+        console.log("Comp Components Data:", {{ analysis_data.comp_components | tojson | safe }});
+    </script>
+    <script>
+        var ctxCompComponents = document.getElementById('compComponentsPieChart').getContext('2d');
+        var dataCompComponents = {
+            labels: {{ analysis_data.comp_components.labels | tojson | safe }},
+            datasets: [{
+                data: {{ analysis_data.comp_components.data | tojson | safe }},
+                backgroundColor: ['red', 'blue', 'green', 'yellow'],
+                borderColor: 'white',
+                borderWidth: 1
+            }]
+        };
+        var myPieChart = new Chart(ctxCompComponents, {
+            type: 'pie',
+            data: dataCompComponents,
+            options: options
+        });
+    </script>
+    
+    <h1>Acceptance Rate</h1>
+    <p>Acceptance Rate: {{ analysis_data.acceptance_rate }}%</p>
+    
+    <h1>Advice and Overall Thought</h1>
+    
+    <ul>
+        {% for advice in analysis_data.advice_list %}
+            <li>{{ advice }}</li>
+        {% endfor %}
+    </ul>
+
+    <h1>Overall Thought</h1>
+    <ul>
+        {% for thought in analysis_data.overall_thought_list %}
+            <li>{{ thought }}</li>
+        {% endfor %}
+    </ul>
+    
+    
+{% endblock %}

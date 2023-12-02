@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="text-start">Clubs</th>
+                <th class="text-end">Id</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for club in clubs %}
+                <tr>
+                    <td class="text-start">
+                        <a href="/reviewed?club_id={{ club.club_id }}" name="{{ club.name }}">
+                            {{ club.name }}
+                        </a>
+                    </td>
+                    <td class="text-end">{{club.club_id}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "layout.html" %}
+{% block title %}
+    Form
+{% endblock %}
+
+{% block main %}
+    <form autocomplete="off" action="/forms" method="post">
+        <label for="club-search">Name of the club to review:</label>
+        <input type="text" id="club-search" name="club_name" oninput="searchClubs()" list="club-list">
+        <datalist id="club-list">
+        <!-- Club names will be dynamically added here -->
+        </datalist>
+        <br>
+        <!-- Overall Rating -->
+        <label for="overall-rating">1. Overall Rating (1-5 stars):</label><br>
+        <div class="star-rating">
+            <input type="radio" id="overall-1-star" name="overall_rating" value="1">
+            <label for="overall-1-star" class="star">&#9733;</label>
+            <input type="radio" id="overall-2-stars" name="overall_rating" value="2">
+            <label for="overall-2-stars" class="star">&#9733;</label>
+            <input type="radio" id="overall-3-stars" name="overall_rating" value="3">
+            <label for="overall-3-stars" class="star">&#9733;</label>
+            <input type="radio" id="overall-4-stars" name="overall_rating" value="4">
+            <label for="overall-4-stars" class="star">&#9733;</label>
+            <input type="radio" id="overall-5-stars" name="overall_rating" value="5">
+            <label for="overall-5-stars" class="star">&#9733;</label>
+        </div> <br>
+
+        <!-- Satisfaction -->
+        <label for="satisfaction">2. Satisfaction (1-5 stars):</label><br>
+        <div class="star-rating">
+            <input type="radio" id="satisfaction-1-star" name="satisfaction_rating" value="1">
+            <label for="satisfaction-1-star" class="star">&#9733;</label>
+            <input type="radio" id="satisfaction-2-stars" name="satisfaction_rating" value="2">
+            <label for="satisfaction-2-stars" class="star">&#9733;</label>
+            <input type="radio" id="satisfaction-3-stars" name="satisfaction_rating" value="3">
+            <label for="satisfaction-3-stars" class="star">&#9733;</label>
+            <input type="radio" id="satisfaction-4-stars" name="satisfaction_rating" value="4">
+            <label for="satisfaction-4-stars" class="star">&#9733;</label>
+            <input type="radio" id="satisfaction-5-stars" name="satisfaction_rating" value="5">
+            <label for="satisfaction-5-stars" class="star">&#9733;</label>
+        </div> <br>
+
+        <!-- Difficulty Level -->
+        <label for="difficulty">3. Difficulty Level (1-5 stars):</label><br>
+        <div class="star-rating">
+            <input type="radio" id="difficulty-1-star" name="difficulty_rating" value="1">
+            <label for="difficulty-1-star" class="star">&#9733;</label>
+            <input type="radio" id="difficulty-2-stars" name="difficulty_rating" value="2">
+            <label for="difficulty-2-stars" class="star">&#9733;</label>
+            <input type="radio" id="difficulty-3-stars" name="difficulty_rating" value="3">
+            <label for="difficulty-3-stars" class="star">&#9733;</label>
+            <input type="radio" id="difficulty-4-stars" name="difficulty_rating" value="4">
+            <label for="difficulty-4-stars" class="star">&#9733;</label>
+            <input type="radio" id="difficulty-5-stars" name="difficulty_rating" value="5">
+            <label for="difficulty-5-stars" class="star">&#9733;</label>
+        </div> <br>
+
+    
+    
+        <fieldset>
+            <legend>4. What are the comp components?</legend>
+            <input type="checkbox" id="interview" name="comp_component" value="interview">
+            <label for="interview">Interview</label><br>
+            <input type="checkbox" id="application" name="comp_component" value="application">
+            <label for="application">Application</label><br>
+            <input type="checkbox" id="completion" name="comp_component" value="completion">
+            <label for="completion">Completion</label><br>
+            <input type="checkbox" id="none" name="comp_component" value="none">
+            <label for="none">None</label><br>
+        </fieldset>
+    
+        <fieldset>
+            <legend>5. Did you get in?</legend>
+            <input type="radio" id="got-in-yes" name="got_in" value="yes">
+            <label for="got-in-yes">Yes</label><br>
+            <input type="radio" id="got-in-no" name="got_in" value="no">
+            <label for="got-in-no">No</label><br>
+        </fieldset>
+    
+    
+        <fieldset>
+            <legend>6. Did the comp require any preparation?</legend>
+            <input type="radio" id="preparation-yes" name="preparation" value="yes">
+            <label for="preparation-yes">Yes</label><br>
+            <input type="radio" id="preparation-no" name="preparation" value="no">
+            <label for="preparation-no">No</label><br>
+        </fieldset>
+    
+        <label for="overall-thought">7. Overall thought on the comp?</label><br>
+        <input type="text" id="overall-thought" name="overall_thought"><br>
+    
+        <label for="advice">8. Any advice for future applicants?</label><br>
+        <input type="text" id="advice" name="advice"><br>
+    
+        <input type="submit" value="Submit">
+    </form>
+    
+    <style>
+
+form {
+    font-family: "Georgia", "Times New Roman", Times, serif;
+    background-color: #ffffff;
+    color: #FFD700;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #B59410;
+}
+
+input[type="number"],
+input[type="text"],
+input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #a71930; /* Harvard Crimson */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #8b1c34; /* Darker shade of Harvard Crimson */
+}
+
+fieldset {
+    border: 1px solid #ccc;
+    padding: 12px;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-weight: bold;
+    padding: 0 5px;
+    margin-bottom: 10px;
+    color: #B59410;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    margin-right: 5px;
+}
+
+input[type="checkbox"] + label,
+input[type="radio"] + label {
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.star-rating {
+    direction: rtl;
+    font-size: 0;
+    width: 50%;
+    display: block; /* Display as a block element */
+    margin: auto; /* Center align */
+}
+
+.star-rating input[type="radio"] {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 30px;
+    color: #ccc;
+    cursor: pointer;
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #ffd700;
+}
+
+
+
+    </style>    
+{% endblock %}
+
+
