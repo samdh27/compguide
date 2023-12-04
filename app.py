@@ -1,15 +1,17 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 import matplotlib.pyplot as plt
 import pandas as pd
 from collections import Counter
 import statistics
-from helpers import apology, login_required
-from datetime import datetime
+from helpers import login_required
+from datetime import datetime, timedelta
+from flask_mail import Mail, Message
+import secrets
 
 # Configure application
 app = Flask(__name__)
@@ -24,6 +26,15 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///compguide.db")
 
+#confifure mail 
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'compguide2023@gmail.com'
+app.config['MAIL_PASSWORD'] = 'otzj shwg taqi lujj'
+mail = Mail(app)
+
+reset_tokens = {}
 
 @app.after_request
 def after_request(response):
@@ -121,23 +132,26 @@ def login():
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
         # Ensure username was submitted
-        if not request.form.get("username"):
-            return apology("must provide username", 403)
+        if not request.form.get("email"):
+            flash('No email', 'danger')
+            return render_template("login.html")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash('Password Missing', 'danger')
+            return render_template("login.html")
 
         # Query database for username
         rows = db.execute(
-            "SELECT * FROM users WHERE username = ?", request.form.get("username")
+            "SELECT * FROM users WHERE email = ?", request.form.get("email")
         )
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(
             rows[0]["hash"], request.form.get("password")
         ):
-            return apology("invalid username and/or password", 403)
+            flash('Invalid email or password', 'danger')
+            return render_template("login.html")
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -154,12 +168,33 @@ def login():
 def forms():
     if request.method == "POST":
         club_name = request.form.get("club_name")
+        if not club_name:
+            flash ('Missing Club Name', 'danger')
+            return render_template("forms.html")
         overall_rating = request.form.get("overall_rating")
+        if not overall_rating:
+            flash ('Missing Overall Rating', 'danger')
+            return render_template("forms.html")
         satisfaction= request.form.get("satisfaction_rating")
+        if not satisfaction:
+            flash ('Missing Satisfaction Rating', 'danger')
+            return render_template("forms.html")
         difficulty = request.form.get("difficulty_rating")
+        if not difficulty:
+            flash ('Missing Difficulty Rating', 'danger')
+            return render_template("forms.html")
         comp_components = ",".join(request.form.getlist("comp_component"))
+        if not comp_components:
+            flash ('Missing Comp Components', 'danger')
+            return render_template("forms.html")
         got_in = request.form.get("got_in")
+        if not got_in:
+            flash ('Missing "Did you get in?"', 'danger')
+            return render_template("forms.html")
         preparation = request.form.get("preparation")
+        if not preparation:
+            flash ('Missing "Did the comp require any preparation?" ', 'danger')
+            return render_template("forms.html")
         overall_thought = request.form.get("overall_thought")
         advice = request.form.get("advice")
         user_id = session["user_id"]
@@ -168,12 +203,14 @@ def forms():
         )
         # Ensure club exists
         if len(rows) != 1:
-            return apology("invalid club name", 403)
+            flash('Invalid Club Name', 'danger')
+            return render_template("forms.html")
         
         club_id = rows[0]['club_id']
 
         if has_user_reviewed(user_id, club_id) is True:
-            return apology("Already Reviewed!")
+            flash('Already Reviewed','danger')
+            return render_template("forms.html")
         
         db.execute("INSERT INTO reviews (user_id, club_id, overall_rating, satisfaction, difficulty, comp_components, got_in, preparation, overall_thought, advice) VALUES(?,?,?,?,?,?,?,?,?,?)", user_id, club_id, overall_rating, satisfaction, difficulty, comp_components, got_in, preparation, overall_thought, advice)
         return redirect("/")
@@ -213,21 +250,86 @@ def register():
         password = request.form.get("password")
         conf_password = request.form.get("confirmation")
         if not username:
-            return apology("no username provided", 400)
+            flash('Missing Username', 'danger')
+            return render_template("register.html")
         elif not password:
-            return apology("Must Provide a Password", 400)
+            flash('Missing Password', 'danger')
+            return render_template("register.html")
         elif not email:
-            return apology("email err",400)
+            flash('Missing Email', 'danger')
+            return render_template("register.html")
         if password != conf_password:
-            return apology("passwords don't match", 400)
+            flash("Password don't match", 'danger')
+            return render_template("register.html")
+        if not email.endswith('@college.harvard.edu'):
+            flash("Enter your Harvard Email")
+            return render_template("register.html")
         hash = generate_password_hash(password, method="pbkdf2", salt_length=16)
         duplicate_users = db.execute(
             "SELECT username FROM users where username = ?", username
         )
         if bool(duplicate_users):
-            return apology("Username already taken", 400)
+            flash('Username Already Exists', 'danger')
+            return render_template("register.html")
+        
         db.execute("INSERT INTO users (username, email, hash) VALUES(?,?,?)", username, email, hash)
-        return render_template("login.html", x=duplicate_users)
+        session["user_id"] = id
+
+        # Let user know they're registered
+        flash("Registered!")
+        return redirect("/")
     else:
         return render_template("register.html")
 
+
+
+
+@app.route('/resetpassword', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        # Query database for username
+        rows = db.execute(
+            "SELECT * FROM users WHERE email = ?", email
+        )
+        if len(rows) == 1:
+            # Generate a unique token
+            token = secrets.token_urlsafe(16)
+            reset_tokens[email] = {'token': token, 'expiry_time': datetime.now() + timedelta(hours=1)}
+
+            # Send the reset email
+            send_reset_email(email, token)
+            flash('Password reset email sent. Check your inbox.', 'success')
+            return render_template("login.html")
+        flash('Email address not found.', 'danger')
+
+    return render_template('resetpassword.html')
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    for email, data in reset_tokens.items():
+        if data['token'] == str(token) and datetime.now() < data['expiry_time']:
+            found_email = email
+            break
+    else:
+        flash('Invalid or expired reset token.', 'danger')
+        return render_template("login.html")
+
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        
+        # Update the password (simulate updating the database)
+        hash = generate_password_hash(new_password, method="pbkdf2", salt_length=16)
+        db.execute("UPDATE users SET hash =? WHERE  email= ? ", hash, found_email)
+        # Remove the used token
+        del reset_tokens[email]
+
+        flash('Password reset successful. You can now log in with your new password.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html')
+
+def send_reset_email(email, token):
+    msg = Message('Password Reset Request', sender='compguide2023@gmail.com', recipients=[email])
+    msg.body = f"Click the following link to reset your password: {url_for('reset_password', token=token, _external=True)}"
+    mail.send(msg)
